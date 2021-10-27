@@ -1,194 +1,215 @@
-import React, { Fragment, useEffect, useState } from 'react'
-import axios from 'axios'
-import MaterialDatatable from "material-datatable";
-
+import React, {Fragment, useEffect, useState} from 'react';
+import axios from 'axios';
+import MaterialDatatable from 'material-datatable';
+import { useMediaQuery } from 'react-responsive';
+import { Container, Grid, Button, Typography, TextField } from '@material-ui/core';
+import Swal from 'sweetalert2'
 
 const MiComponente = () => {
     const [nombre, setNombre] = useState("")
     const [apellido, setApellido] = useState("")
     const [personas, setPersonas] = useState([])
-    const [Id_persona, setID] = useState("")
+    const [id_persona, setId] = useState()
+    const isMobile = useMediaQuery({ query: `(max-width: 760px)`});
 
     const handleInputChangeNombre = (event) => {
-        //console.log(event.target.value)
         setNombre(event.target.value)
     }
 
     const handleInputChangeApellido = (event) => {
-        //console.log(event.target.value)
         setApellido(event.target.value)
-
     }
 
     const enviarDatos = () => {
-        // alert("Entro aqui")
-        // console.log("Enviando datos nombre:"+nombre+" y apellido:"+apellido)
         console.log(`Enviando datos nombre:${nombre} y apellido:${apellido}`)
 
         guardarPersona();
-     
-     
-        // let nuevo = {
-        //     name: nombre,
-        //     last: apellido
-        // }
-        // setPersonas(personas => [...personas, nuevo])
-        // setNombre("")
-        // setApellido("")
     }
 
-    useEffect(()=>{
-
+    useEffect(() => {
         getPersonas()
     },[])
-    let datosP;
-    async function getPersonas() {
-        try {
-          const response = await axios.get('http://192.99.144.232:5000/api/personas?grupo=13');
-          if(response.status === 200)
-          {
-            
-            setPersonas(response.data.persona)
-            console.log(response.data);
-
-          }
-         
-        } catch (error) {
-          console.error(error);
+    const json = ""
+    async function getPersonas(){
+        try{
+            const response = await axios.get('http://192.99.144.232:5000/api/personas?grupo=13')
+            if (response.status == 200){
+                setPersonas(response.data.persona) // Se setea el response json en la variable personas
+            }
+        } catch (error){
+            console.error(error)
         }
-      }
-    
-      function guardarPersona()
-      {
-        axios.post('http://192.99.144.232:5000/api/personas', {
-            nombre: nombre,
-            apellido: apellido,
-            grupo:13
-          })
-          .then(function (response) {
+    }
 
-                if(response.status===200)
-                {
-                    alert("Registro correcto")
-                    getPersonas()
-
-                }else{
-                    alert("Error al guardar")
-                }
-            
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
-      }
-
-      const actualizarDatos = (Id_persona) => {
-        console.log(Id_persona);
-        axios.put(`http://192.99.144.232:5000/api/personas/${Id_persona}`, {
+    const editPersona = (id_persona) => {
+        
+        axios.put(`http://192.99.144.232:5000/api/personas/${id_persona}`, {
+            _id: id_persona,
             nombre: nombre,
             apellido: apellido,
             grupo: 13
         })
-        .then(function (response) {
-
-            if (response.status === 200) {
-                alert("Actualización correcta")
+        .then(function (response){
+            if(response.status == 200){
+                alert("Registro modificado con exito")
                 getPersonas()
+            }
+            else {
+                alert("Error al guardar")
+            }
+        })
+        .catch(function (error){
+            console.log(error)
+        });
+    }
 
-            } else {
-                alert("Error al actualizar")
+    const EliminarPersona = (id_persona) => {
+        Swal.fire({
+            title: 'Estas seguro?',
+            text: "No podras deshacerlo!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Si, Eliminalo!'
+          }).then((result) => {
+            if (result.isConfirmed) {
+                axios.delete(`http://192.99.144.232:5000/api/personas/${id_persona}`, {
+                    _id: id_persona
+                })
+                .then (function (response){
+                    if(response.status == 200){
+                        Swal.fire(
+                            'Eliminado!',
+                            'El dato ha sido eliminada',
+                            'Correcto'
+                          )
+                        getPersonas()
+                    }
+                })
+                .catch(function (error){
+                    console.log(error)
+                });    
+            }
+          })
+    }
+    function guardarPersona(){
+        axios.post('http://192.99.144.232:5000/api/personas', {
+            nombre: nombre,
+            apellido: apellido,
+            grupo: 13 // ver que grupo somos
+        })
+        .then(function (response){
+            if(response.status == 200){
+                alert("Registro correcto")
+                getPersonas()
+            }
+            else {
+                alert("Error al guardar")
             }
 
         })
-        .catch(function (error) {
+        .catch(function (error){
             console.log(error);
         });
     }
 
-      const columns = [
+    
+
+    const columns = [
         {
-         name: "Nombre",
-         field: "nombre",
-         options: {
-          filter: true,
-          sort: true,
-         }
+            name: "Nombre",
+            field: "nombre",
+            options: {
+                filter: true,
+                sort: false,
+            }
         },
         {
-         name: "Apellido",
-         field: "apellido",
-         options: {
-          filter: true,
-          sort: true,
-         }
+            name: "Apellido",
+            field: "apellido",
+            options: {
+                filter: true,
+                sort: false,
+            }
         },
         
-       ];
-        
-       /*const data = [
-           {nombre: "Name 1", apellido: "Title 1"},
-           {nombre: "Name 2", apellido: "Title 2"},
-       ];
-       let listaP = [{nombre:"", apellido:""}]
-       datosP.persona.map((persona)=>(
-        listaP.push(persona.nombre, persona.apellido) 
-       ));*/
-      
-       const handleRowClick = (rowData, rowMeta) => {
-        console.log(rowData);
-        document.getElementsByTagName("input").item(0).value = rowData.nombre
-        document.getElementsByTagName("input").item(1).value = rowData.apellido
-        setID(rowData.Id_persona)
-       
+    ];
+
+    /*
+    const data1 = [
+        {name: "Name 1", title: "Title 1", location: "Location 1", age: 30, salary: 10},
+        {name: "Name 2", title: "Title 2", location: "Location 2", age: 31, salary: 11},
+    ];
+    */
+    
+
+    const handleRowClick = (rowData, rowMeta) => {
+        console.log(rowData.name);
+        setNombre(rowData.nombre);
+        setApellido(rowData.apellido);
+        setId(rowData._id)
     };
 
-       const options = {
-        filterType: 'checkbox',
-        onlyOneRowCanBeSelected:true,
-        onRowClick: handleRowClick
-       };
-
-       const handleInputCLean = () => {
+    const handleInputClean = () => {
         setNombre('');
         setApellido('');
-        setID(0);
+        setId('');
     }
+
+    const options = {
+        filterType: 'checkbox',
+        onlyOneRowCanBeSelected: true,
+        onRowClick: handleRowClick
+    };
+
     return (
-        <Fragment>
-            <h1>Formulario</h1>
-            <div>
-                <div>
-                    <input type="text" placeholder="Nombre" name="nombre" onChange={handleInputChangeNombre} value={nombre} ></input>
-                </div>
+        <Container maxWidth="md">
+        <Grid container spacing={2}>
+            <Grid item xs={12} md={12}>
+                <Typography variant="h6">
+                    Personas
+                </Typography>
+            </Grid>
+            <Grid item xs={12} md={6} fullWidth>
+                <TextField id="nombre" label="Nombre" variant="outlined" onChange={handleInputChangeNombre} value={nombre} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={6}>
+                <TextField id="apellido" label="Apellido" variant="outlined" onChange={handleInputChangeApellido} value={apellido} fullWidth />
+            </Grid>
+            <Grid item xs={12} md={2}>
+                <Button variant="contained" color="primary" onClick={guardarPersona} fullWidth>Guardar</Button>
 
-                <div>
-                    <input type="text" placeholder="Apellido" name="apellido" onChange={handleInputChangeApellido} value={apellido}></input>
-                </div>
-                {
-                    Id_persona ? <button onClick={()=> {actualizarDatos(Id_persona)}}> Modificar</button> :
-                    <button onClick={enviarDatos}>Enviar</button>
-                }
-                <br/>
-                
-                <button onClick={handleInputCLean}>Limpiar</button>
+            </Grid>
+            {
+                        id_persona ?
+                        <Grid item xs={12} md={2}>
+                        <Button variant="contained" onClick={()=>{EliminarPersona(id_persona)}} color="secondary" fullWidth
+                        >Eliminar</Button>
+                        </Grid>
+                        :
+                        <Grid item xs={12} md={2}>
+                        <Button variant="contained" disabled color="secondary" fullWidth
+                        >Eliminar</Button>
+                        </Grid>
+                        
+                        
+            }
+        </Grid>
 
-                {/* <div className="users">
-                    {personas.map((persona) => (
-                 
-                          <li>{persona.nombre} {persona.apellido}</li>
-                    ))}
-                </div> */}
+  
+        <Grid item xs={12} md={12} className="tabla">
+        <MaterialDatatable
+            title={"Miembros de grupo"}
+            data={personas}
+            columns={columns}
+            options={options}
+        />
+        
+    </Grid>
+  
 
-            </div>
-            <MaterialDatatable
-  title={"Employee List"}
-  data={personas}
-  columns={columns}
-  options={options}
-/>
-
-        </Fragment>
-
+    </Container>
     )
 }
 export default MiComponente
